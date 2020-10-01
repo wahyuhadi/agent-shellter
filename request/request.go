@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+/*
+/* check file url cointaining vuln RCE for interact with agent-shellter
+/*/
 func DoCheckFileBackdoor(url string) {
 	fmt.Println("[+] Checking shellter file ..")
 	resp, err := http.Get(url)
@@ -24,6 +27,8 @@ func DoCheckFileBackdoor(url string) {
 	return
 }
 
+/* Send Payload in QueryParams
+ */
 func DoRequest(url string) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -40,6 +45,7 @@ func DoRequest(url string) {
 	fmt.Println("\n")
 }
 
+/* Send Payload in body form */
 func DoPostRequestPayloadInBody(url, payload string) {
 
 	req, err := http.NewRequest("GET", url, strings.NewReader(payload))

