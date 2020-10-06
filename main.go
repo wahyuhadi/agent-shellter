@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -47,15 +48,17 @@ func executor(in string) {
 			return
 		}
 
-		command := blocks[1]
+		// command := blocks[1]
+		interactCommand := strings.Split(in, "command ")
+
 		if InParams == "yes" {
-			url := Url + command
+			url := Url + url.QueryEscape(interactCommand[1])
 			request.DoRequest(url)
 			return
 		}
 
 		/*If payload send in body format parses the command*/
-		interactCommand := strings.Split(in, "command")
+		// interactCommand := strings.Split(in, "command")
 		malpaylaoad := payload.GenPayload(Type, interactCommand[1])
 		request.DoPostRequestPayloadInBody(Url, malpaylaoad)
 		return
@@ -132,7 +135,7 @@ func main() {
 		executor,
 		completer,
 		prompt.OptionPrefix("-->> "),
-		//zprompt.OptionLivePrefix(changeLivePrefix),
+		prompt.OptionLivePrefix(changeLivePrefix),
 		prompt.OptionTitle("live-prefix-example"),
 	)
 	p.Run()
